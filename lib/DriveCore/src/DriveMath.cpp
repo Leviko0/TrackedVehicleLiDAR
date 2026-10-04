@@ -34,7 +34,10 @@ TrackSpeeds mixArcade(float throttle, float turn) {
     left /= largest;
     right /= largest;
   }
-  return {left, right};
+  TrackSpeeds speeds;
+  speeds.left = left;
+  speeds.right = right;
+  return speeds;
 }
 
 float slewToward(float current, float target, float maxStep) {
