@@ -63,6 +63,18 @@ void test_slew_limits_step_size() {
   TEST_ASSERT_EQUAL_FLOAT(0.55f, slewToward(0.5f, 0.55f, 0.1f));
 }
 
+void test_ramp_accelerates_slowly_and_brakes_fast() {
+  TEST_ASSERT_FLOAT_WITHIN(1e-6f, 0.1f, rampToward(0.0f, 1.0f, 0.1f, 0.3f));
+  TEST_ASSERT_FLOAT_WITHIN(1e-6f, 0.5f, rampToward(0.8f, 0.0f, 0.1f, 0.3f));
+  TEST_ASSERT_FLOAT_WITHIN(1e-6f, -0.5f, rampToward(-0.8f, 0.0f, 0.1f, 0.3f));
+  TEST_ASSERT_FLOAT_WITHIN(1e-6f, 0.4f, rampToward(0.5f, 0.4f, 0.1f, 0.3f));
+}
+
+void test_ramp_brakes_to_zero_before_reversing() {
+  TEST_ASSERT_EQUAL_FLOAT(0.0f, rampToward(0.2f, -1.0f, 0.1f, 0.3f));
+  TEST_ASSERT_FLOAT_WITHIN(1e-6f, -0.1f, rampToward(0.0f, -1.0f, 0.1f, 0.3f));
+}
+
 void test_speed_to_duty_respects_min_duty() {
   TEST_ASSERT_EQUAL_FLOAT(0.0f, speedToDuty(0.0f, 0.25f));
   TEST_ASSERT_EQUAL_FLOAT(1.0f, speedToDuty(1.0f, 0.25f));
@@ -97,6 +109,16 @@ void test_parse_speed_limit() {
   TEST_ASSERT_EQUAL_FLOAT(0.0f, parseCommand("L -1").value);
 }
 
+void test_parse_guard() {
+  Command on = parseCommand("G 1");
+  TEST_ASSERT_TRUE(on.type == CommandType::Guard);
+  TEST_ASSERT_EQUAL_FLOAT(1.0f, on.value);
+  TEST_ASSERT_EQUAL_FLOAT(0.0f, parseCommand("G 0").value);
+  TEST_ASSERT_TRUE(parseCommand("G 0").type == CommandType::Guard);
+  TEST_ASSERT_TRUE(parseCommand("G 2").type == CommandType::Invalid);
+  TEST_ASSERT_TRUE(parseCommand("G").type == CommandType::Invalid);
+}
+
 void test_parse_stop_and_ping() {
   TEST_ASSERT_TRUE(parseCommand("S").type == CommandType::Stop);
   TEST_ASSERT_TRUE(parseCommand("P\n").type == CommandType::Ping);
@@ -123,11 +145,14 @@ int main(int, char**) {
   RUN_TEST(test_mix_clamps_out_of_range_input);
   RUN_TEST(test_deadband_zeroes_small_values_and_rescales);
   RUN_TEST(test_slew_limits_step_size);
+  RUN_TEST(test_ramp_accelerates_slowly_and_brakes_fast);
+  RUN_TEST(test_ramp_brakes_to_zero_before_reversing);
   RUN_TEST(test_speed_to_duty_respects_min_duty);
   RUN_TEST(test_clamp_turns_nan_into_zero);
   RUN_TEST(test_parse_drive);
   RUN_TEST(test_parse_drive_clamps_values);
   RUN_TEST(test_parse_speed_limit);
+  RUN_TEST(test_parse_guard);
   RUN_TEST(test_parse_stop_and_ping);
   RUN_TEST(test_parse_rejects_garbage);
   return UNITY_END();

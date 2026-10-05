@@ -46,12 +46,19 @@ void WebInterface::update() {
 
 size_t WebInterface::clientCount() const { return socket_.count(); }
 
+void WebInterface::broadcastBinary(const uint8_t* data, size_t length) {
+  if (socket_.count() > 0 && socket_.availableForWriteAll()) {
+    socket_.binaryAll(data, length);
+  }
+}
+
 void WebInterface::handleWsEvent(AsyncWebSocketClient* client, AwsEventType type, void* arg,
                                  uint8_t* data, size_t len) {
   switch (type) {
     case WS_EVT_CONNECT:
       Serial.printf("[web] client #%u connected from %s\n", client->id(),
                     client->remoteIP().toString().c_str());
+      if (greetingProvider_) client->text(greetingProvider_());
       break;
     case WS_EVT_DISCONNECT:
       Serial.printf("[web] client #%u disconnected\n", client->id());

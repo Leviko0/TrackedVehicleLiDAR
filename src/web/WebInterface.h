@@ -13,11 +13,14 @@ class WebInterface {
  public:
   using CommandHandler = std::function<void(const drivecore::Command&)>;
   using TelemetryProvider = std::function<String()>;
+  using GreetingProvider = std::function<String()>;
 
   WebInterface(uint16_t port, uint32_t telemetryIntervalMs);
 
   void onCommand(CommandHandler handler) { commandHandler_ = std::move(handler); }
   void onTelemetry(TelemetryProvider provider) { telemetryProvider_ = std::move(provider); }
+  // Text message sent once to every newly connected client (e.g. static config).
+  void onGreeting(GreetingProvider provider) { greetingProvider_ = std::move(provider); }
 
   void begin();
 
@@ -25,6 +28,9 @@ class WebInterface {
   void update();
 
   size_t clientCount() const;
+
+  // Sends a binary message to all clients, skipped if they cannot keep up.
+  void broadcastBinary(const uint8_t* data, size_t length);
 
  private:
   void handleWsEvent(AsyncWebSocketClient* client, AwsEventType type, void* arg,
@@ -40,4 +46,5 @@ class WebInterface {
 
   CommandHandler commandHandler_;
   TelemetryProvider telemetryProvider_;
+  GreetingProvider greetingProvider_;
 };

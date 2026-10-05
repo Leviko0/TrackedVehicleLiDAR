@@ -31,6 +31,10 @@ TrackSpeeds mixArcade(float throttle, float turn);
 // Moves `current` towards `target` by at most `maxStep`.
 float slewToward(float current, float target, float maxStep);
 
+// Like slewToward, but slowing down (moving towards zero) may use a larger
+// step than speeding up. A change of direction first brakes to zero.
+float rampToward(float current, float target, float accelStep, float decelStep);
+
 // Maps a speed magnitude in [0, 1] to a PWM duty cycle in [minDuty, 1].
 // A magnitude of 0 always yields 0 (motor off).
 float speedToDuty(float magnitude, float minDuty);

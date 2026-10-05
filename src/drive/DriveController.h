@@ -7,7 +7,8 @@
 
 struct DriveConfig {
   float deadband;          // joystick deadband (0..1)
-  float rampPerSecond;     // max change of track speed per second
+  float accelPerSecond;    // max increase of track speed per second
+  float brakePerSecond;    // max decrease of track speed per second
   uint32_t commandTimeoutMs;  // failsafe: stop when commands stop arriving
   float defaultSpeedLimit; // 0..1
 };
@@ -38,6 +39,10 @@ class DriveController {
   void setSpeedLimit(float limit);
   float speedLimit() const;
 
+  // Caps the throttle (before mixing) in each direction, 0..1. Used by the
+  // collision guard; turning on the spot is never restricted.
+  void setThrottleLimits(float maxForward, float maxBackward);
+
   // Call as often as possible from loop().
   void update();
 
@@ -55,6 +60,8 @@ class DriveController {
   float targetThrottle_ = 0.0f;
   float targetTurn_ = 0.0f;
   float speedLimit_;
+  float maxForward_ = 1.0f;
+  float maxBackward_ = 1.0f;
   uint32_t lastCommandMs_ = 0;
   bool hasCommand_ = false;
   bool emergencyStopRequested_ = false;

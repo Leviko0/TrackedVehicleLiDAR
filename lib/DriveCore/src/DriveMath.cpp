@@ -48,6 +48,16 @@ float slewToward(float current, float target, float maxStep) {
   return target;
 }
 
+float rampToward(float current, float target, float accelStep, float decelStep) {
+  const bool slowingDown = (current > 0.0f && target < current) ||
+                           (current < 0.0f && target > current);
+  if (!slowingDown) return slewToward(current, target, accelStep);
+
+  // Never overshoot zero while braking; the next step accelerates the other way.
+  const bool reversing = (current > 0.0f && target < 0.0f) || (current < 0.0f && target > 0.0f);
+  return slewToward(current, reversing ? 0.0f : target, decelStep);
+}
+
 float speedToDuty(float magnitude, float minDuty) {
   magnitude = clamp(magnitude, 0.0f, 1.0f);
   if (magnitude <= 0.0f) return 0.0f;

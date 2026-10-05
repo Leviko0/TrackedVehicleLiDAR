@@ -52,6 +52,13 @@ float DriveController::speedLimit() const {
   return limit;
 }
 
+void DriveController::setThrottleLimits(float maxForward, float maxBackward) {
+  portENTER_CRITICAL(&lock_);
+  maxForward_ = drivecore::clamp(maxForward, 0.0f, 1.0f);
+  maxBackward_ = drivecore::clamp(maxBackward, 0.0f, 1.0f);
+  portEXIT_CRITICAL(&lock_);
+}
+
 void DriveController::update() {
   const uint32_t now = millis();
   const float dt = (now - lastUpdateMs_) / 1000.0f;
@@ -61,6 +68,8 @@ void DriveController::update() {
   const float throttle = targetThrottle_;
   const float turn = targetTurn_;
   const float limit = speedLimit_;
+  const float maxForward = maxForward_;
+  const float maxBackward = maxBackward_;
   const uint32_t lastCommandMs = lastCommandMs_;
   const bool hasCommand = hasCommand_;
   const bool emergencyStop = emergencyStopRequested_;
@@ -78,13 +87,15 @@ void DriveController::update() {
     return;
   }
 
+  const float guardedThrottle = drivecore::clamp(
+      drivecore::applyDeadband(throttle, config_.deadband), -maxBackward, maxForward);
   drivecore::TrackSpeeds goal = drivecore::mixArcade(
-      drivecore::applyDeadband(throttle, config_.deadband),
-      drivecore::applyDeadband(turn, config_.deadband));
+      guardedThrottle, drivecore::applyDeadband(turn, config_.deadband));
 
-  const float maxStep = config_.rampPerSecond * dt;
-  left_ = drivecore::slewToward(left_, goal.left * limit, maxStep);
-  right_ = drivecore::slewToward(right_, goal.right * limit, maxStep);
+  const float accelStep = config_.accelPerSecond * dt;
+  const float brakeStep = config_.brakePerSecond * dt;
+  left_ = drivecore::rampToward(left_, goal.left * limit, accelStep, brakeStep);
+  right_ = drivecore::rampToward(right_, goal.right * limit, accelStep, brakeStep);
 
   leftMotor_.setSpeed(left_);
   rightMotor_.setSpeed(right_);

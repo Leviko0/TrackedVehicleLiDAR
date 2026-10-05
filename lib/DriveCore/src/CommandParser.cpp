@@ -61,6 +61,14 @@ Command parseCommand(const char* text) {
       }
       break;
     }
+    case 'G': {
+      float enabled = 0.0f;
+      if (readFloat(p, enabled) && atEnd(p) && (enabled == 0.0f || enabled == 1.0f)) {
+        cmd.type = CommandType::Guard;
+        cmd.value = enabled;
+      }
+      break;
+    }
     case 'S':
       if (atEnd(p)) cmd.type = CommandType::Stop;
       break;
