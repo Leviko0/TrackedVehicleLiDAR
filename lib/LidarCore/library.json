@@ -1,0 +1,7 @@
+{
+  "name": "LidarCore",
+  "version": "1.0.0",
+  "description": "Hardware independent COIN-D6 LiDAR decoding, scan assembly and obstacle geometry",
+  "frameworks": "*",
+  "platforms": "*"
+}

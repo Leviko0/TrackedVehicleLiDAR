@@ -1,0 +1,7 @@
+{
+  "name": "DriveCore",
+  "version": "1.0.0",
+  "description": "Hardware independent tank-drive math and command protocol",
+  "frameworks": "*",
+  "platforms": "*"
+}
